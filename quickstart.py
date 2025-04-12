@@ -1,16 +1,14 @@
 import os.path
+from typing import List
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# Add your local PDF file names here for now
-local_files = {"11. Finale.pdf", "mybook.pdf", "sample.pdf"}  # Simulate input
-
 SCOPES = ["https://www.googleapis.com/auth/drive.metadata.readonly"]
 
-def main():
+def compare_books_with_local(local_files: set[str]) -> List[dict]:
     creds = None
     if os.path.exists("token.json"):
         creds = Credentials.from_authorized_user_file("token.json", SCOPES)
@@ -59,15 +57,19 @@ def main():
             if file['name'] not in local_files
         ]
 
-        if not missing:
-            print("No missing files. Everything in Drive is already local.")
-        else:
-            print("Missing files from local:")
-            for file in missing:
-                print(f"{file['name']}")
+        return missing
 
     except HttpError as error:
         print(f"An error occurred: {error}")
+        return []
 
+# Example usage
 if __name__ == "__main__":
-    main()
+    local_books = {"11. Finale.pdf", "mybook.pdf", "sample.pdf"}
+    missing_books = compare_books_with_local(local_books)
+    if not missing_books:
+        print("No missing files. Everything in Drive is already local.")
+    else:
+        print("Missing files from local:")
+        for file in missing_books:
+            print(f"{file['name']}")
